@@ -24,8 +24,8 @@ def parse_text(xx):
     return yy
 
 sp.init_printing()  # LaTeX like pretty printing for IPython
-title = '$F_{Landau}$ Part'
-T = 300
+title = '$F_{Landau_Ginzburg}$ Part'
+T = 0
 
 a_1 = 4.9*(T - 1103*1E5)
 a_11 = 5.42*1E8
