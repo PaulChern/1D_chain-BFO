@@ -16,8 +16,15 @@ def F_landau_(xx):
     #variables = to_variables(xx)
     return F_landau_num(*tuple(xx))
 
-sp.init_printing()  # LaTeX like pretty printing for IPython
+def parse_text(xx):
+    yy = ''
+    for x in xx:
+        if x != '$' and x != '{' and x != '}':
+            yy += x
+    return yy
 
+sp.init_printing()  # LaTeX like pretty printing for IPython
+title = '$F_{Landau}$ Part'
 T = 300
 
 a_1 = 4.9*(T - 1103*1E5)
@@ -45,8 +52,11 @@ P_ = minimize(F_landau_, P_initial, tol=1e-2)
 
 P = to_tensor(P_.x)
 fig=plt.figure(figsize=(10, 6))
-plt.subplots_adjust(hspace=0.0,wspace=0.5,left=0.10,right=0.99,top=0.99,bottom=0.1)
-plt.plot(range(0,102),P[0],'r-')
-plt.plot(range(0,102),np.sqrt(P[1]**2+P[2]**2),'g-')
+#plt.subplots_adjust(hspace=0.0,wspace=0.5,left=0.10,right=0.99,top=0.99,bottom=0.1)
+plt.plot(range(0,102), P[0], 'r-', label='[100]')
+plt.plot(range(0,102), np.sqrt(P[1]**2+P[2]**2), 'g-', label='[011]')
+plt.title(title)
+plt.grid()
+plt.legend()
 #plt.plot(range(0,102),P[2],'b-')
-plt.show()
+plt.savefig(parse_text(title)+'.pdf', format='pdf')
