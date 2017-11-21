@@ -24,10 +24,10 @@ def parse_text(xx):
     return yy
 
 sp.init_printing()  # LaTeX like pretty printing for IPython
-title = '$F_{Landau_Ginzburg}$ Part'
-T = 0
+title = '$F_{Landau-Ginzburg}$ Part'
+T = 300
 
-a_1 = 4.9*(T - 1103*1E5)
+a_1 = 4.9*(T - 1103)*1E5
 a_11 = 5.42*1E8
 a_12 = 1.5*1E8
 G_11 = 0.6*0.98*1E10
