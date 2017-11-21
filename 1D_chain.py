@@ -9,7 +9,7 @@ def to_variables(xx):
     return reduce(lambda x,y : x+y, xx.tolist())
 
 def to_tensor(xx):
-    return xx.reshape(3,101)
+    return xx.reshape(3,100)
 
 def F_landau_(xx):
     """ Helper for receiving vector parameters """
