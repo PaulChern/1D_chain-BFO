@@ -27,14 +27,14 @@ def parse_text(xx):
 
 sp.init_printing()  # LaTeX like pretty printing for IPython
 title = '$F_{Landau-Ginzburg-strain}$ Part'
-T = 300
-P0 = 0.827
-DW_size = 102
+T = 300.0
+P0 = 0.541
+DW_size = 51
 
 a_1 = 4.9*(T - 1103)*1E5*1E-10
-a_11 = 5.42E8*1E-10
-a_12 = 1.5E8*1E-10
-G_11 = 0.6*0.98*1E-10*1E-10*0
+a_11 = 6.5E8*1E-10
+a_12 = 1.0E8*1E-10
+G_11 = 0.6*0.98*1E-10*1E-10
 
 c_1111 = 3.02E11*1E-10
 c_1122 = 1.62E11*1E-10
@@ -44,7 +44,7 @@ Q_1122 = -0.016
 Q_1212 = 0.01
 
 q_1111 = 2*c_1111*Q_1111
-q_1122 = 2*c_1111*Q_1122
+q_1122 = c_1111*Q_1122 + c_1122*Q_1111
 q_1212 = 2*c_1212*Q_1212
 
 Px = np.array([ x for x, _ in zip(sp.numbered_symbols('Px_'), range(0,DW_size))])
@@ -53,10 +53,10 @@ Pz = np.array([ x for x, _ in zip(sp.numbered_symbols('Pz_'), range(0,DW_size))]
 #Px[0] = -1; Px[101] = 1; Py[0] = -1; Py[101] = -1; Pz[0] = -1; Pz[101] = -1
 
 P = np.array([Px, Py, Pz])
-
-Px_initial = np.array([(2*P0*2.0/np.pi)*math.atan((x - 50)/50.0) for x in range(0,DW_size)])
-Py_initial = np.array(DW_size*[-1*P0])
-Pz_initial = np.array(DW_size*[-1*P0])
+Px_initial = np.array([(P0*4.0/np.pi)*math.atan((x - DW_size/2)/(DW_size/2.)) for x in range(0,DW_size)])
+#Px_initial = np.array(DW_size*[-1*P0])
+Py_initial = np.array(DW_size*[1*P0])
+Pz_initial = np.array(DW_size*[1*P0])
 P_initial = np.array([Px_initial, Py_initial, Pz_initial])
 
 epsilon_11 = np.array([ x for x, _ in zip(sp.numbered_symbols('epsilon_11_'), range(0,DW_size))])
@@ -70,13 +70,14 @@ epsilon = np.array([epsilon_11, epsilon_22, epsilon_33, epsilon_12, epsilon_23, 
 variables_initial = [Px_initial,
                      Py_initial,
                      Pz_initial,
-                     np.random.rand(1,DW_size)[0]/100.0,
-                     np.random.rand(1,DW_size)[0]/100.0,
-                     np.random.rand(1,DW_size)[0]/100.0,
-                     np.random.rand(1,DW_size)[0]/100.0,
-                     np.random.rand(1,DW_size)[0]/100.0,
-                     np.random.rand(1,DW_size)[0]/100.0]
+                     np.random.rand(1,DW_size)[0]*0.0,
+                     np.random.rand(1,DW_size)[0]*0.0,
+                     np.random.rand(1,DW_size)[0]*0.0,
+                     np.random.rand(1,DW_size)[0]*0.0,
+                     np.random.rand(1,DW_size)[0]*0.0,
+                     np.random.rand(1,DW_size)[0]*0.0]
 
+print(variables_initial)
 variables = to_variables(P) + to_variables(epsilon)
 
 F_landau_sym = np.sum(a_1*(P[0]**2 + P[1]**2 + P[2]**2)
@@ -90,19 +91,18 @@ F_landau_sym = np.sum(a_1*(P[0]**2 + P[1]**2 + P[2]**2)
                     - q_1122*(epsilon_11*(P[1]**2+P[2]**2) + epsilon_22*(P[2]**2+P[0]**2) + epsilon_33*(P[0]**2+P[1]**2))
                     - 0.5*q_1212*(epsilon_12*P[0]*P[1] + epsilon_23*P[1]*P[2] + epsilon_31*P[2]*P[0]))
 
-print(F_landau_sym)
 F_landau_num = sp.lambdify(variables, F_landau_sym, modules='numpy')
 
-cons = [{'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,0] + P0)**2},
+cons = ({'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,0] + P0)**2},
         {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,-1] - P0)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,0] + P0)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,-1] + P0)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,0] + P0)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,-1] + P0)**2}]
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,0] - P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,-1] - P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,0] - P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,-1] - P0)**2})
 
 bnds = tuple((-1,1) for x in variables)
 
-Pepsilon_ = minimize(F_landau_, variables_initial, method='SLSQP', constraints=cons, bounds=bnds, tol=1e-3)
+Pepsilon_ = minimize(F_landau_, variables_initial, method='SLSQP', constraints=cons, bounds=bnds, tol=1e-10)
 Pepsilon = to_tensor(Pepsilon_.x)
 
 print(to_tensor(Pepsilon_.x))
@@ -110,10 +110,11 @@ print(F_landau_(Pepsilon_.x))
 # plot part
 fig=plt.figure(figsize=(10, 6))
 #plt.subplots_adjust(hspace=0.0,wspace=0.5,left=0.10,right=0.99,top=0.99,bottom=0.1)
-plt.plot(range(0,DW_size), Pepsilon[0], 'r-', label='[100]')
-plt.plot(range(0,DW_size), Pepsilon[1], 'g-', label='[010]')
-plt.plot(range(0,DW_size), Pepsilon[2], 'b-', label='[001]')
-#plt.plot(range(0,DW_size), np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2), 'g-', label='[011]')
+plt.plot(range(0,DW_size), Pepsilon[0], 'r-o', label='[100]')
+plt.plot(range(0,DW_size), Pepsilon[1], 'g-s', label='[010]')
+plt.plot(range(0,DW_size), Pepsilon[2], 'b-p', label='[001]')
+plt.plot(range(0,DW_size), np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2+Pepsilon[0]**2), 'k-', label='total polarization')
+plt.ylabel('$P (C/m^2)$')
 plt.title(title)
 plt.grid()
 plt.legend()
