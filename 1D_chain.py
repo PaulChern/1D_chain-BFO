@@ -16,7 +16,7 @@ def to_unilist(xx):
 
 def F_landau_(xx):
     """ Helper for receiving vector parameters """
-    #variables = to_variables(xx)
+    print('... ... ...')
     return F_landau_num(*tuple(xx))
 
 def parse_text(xx):
@@ -33,7 +33,7 @@ T = 300
 a_1 = 4.9*(T - 1103)*1E5
 a_11 = 5.42E8
 a_12 = 1.5E8
-G_11 = 0.6*0.98*1E10
+G_11 = 0.6*0.98*1E-10
 
 c_1111 = 3.02E11
 c_1122 = 1.62E11
@@ -69,15 +69,17 @@ epsilon = np.array([epsilon_11, epsilon_22, epsilon_33, epsilon_12, epsilon_23, 
 variables_initial = [Px_initial[1:101],
                      Py_initial[1:101],
                      Pz_initial[1:101],
-                     np.random.rand(1,101)[0],
-                     np.random.rand(1,101)[0],
-                     np.random.rand(1,101)[0],
-                     np.random.rand(1,101)[0],
-                     np.random.rand(1,101)[0],
-                     np.random.rand(1,101)[0]]
+                     np.random.rand(1,100)[0]/10.0,
+                     np.random.rand(1,100)[0]/10.0,
+                     np.random.rand(1,100)[0]/10.0,
+                     np.random.rand(1,100)[0]/10.0,
+                     np.random.rand(1,100)[0]/10.0,
+                     np.random.rand(1,100)[0]/10.0]
 
-variables = to_variables(P[:,1:101]) + to_variables(epsilon)
 print(variables_initial)
+
+variables = to_variables(P[:,1:101]) + to_variables(epsilon[:,1:101])
+
 F_landau_sym = np.sum(a_1*(P[0][:-1]**2 + P[1][:-1]**2 + P[2][:-1]**2)
                     + a_11*(P[0][:-1]**4 + P[1][:-1]**4 + P[2][:-1]**4)
                     + a_12*(P[0][:-1]**2*P[1][:-1]**2 + P[1][:-1]**2*P[2][:-1]**2 + P[2][:-1]**2*P[0][:-1]**2)
@@ -91,7 +93,7 @@ F_landau_sym = np.sum(a_1*(P[0][:-1]**2 + P[1][:-1]**2 + P[2][:-1]**2)
 
 F_landau_num = sp.lambdify(variables, F_landau_sym, modules='numpy')
 
-Pepsilon_ = minimize(F_landau_, variables_initial, tol=1e-2)
+Pepsilon_ = minimize(F_landau_, variables_initial, method='CG') #, tol=1e100)
 Pepsilon = to_tensor(Pepsilon_.x)
 
 # plot part
