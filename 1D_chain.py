@@ -16,7 +16,6 @@ def to_unilist(xx):
 
 def F_landau_(xx):
     """ Helper for receiving vector parameters """
-    print('... ... ...')
     return F_landau_num(*tuple(xx))
 
 def parse_text(xx):
@@ -29,12 +28,13 @@ def parse_text(xx):
 sp.init_printing()  # LaTeX like pretty printing for IPython
 title = '$F_{Landau-Ginzburg-strain}$ Part'
 T = 300
+P0 = 0.827
 DW_size = 102
 
 a_1 = 4.9*(T - 1103)*1E5*1E-10
 a_11 = 5.42E8*1E-10
 a_12 = 1.5E8*1E-10
-G_11 = 0.6*0.98*1E-10*1E-10
+G_11 = 0.6*0.98*1E-10*1E-10*0
 
 c_1111 = 3.02E11*1E-10
 c_1122 = 1.62E11*1E-10
@@ -54,9 +54,9 @@ Pz = np.array([ x for x, _ in zip(sp.numbered_symbols('Pz_'), range(0,DW_size))]
 
 P = np.array([Px, Py, Pz])
 
-Px_initial = np.array([(2.0/np.pi)*math.atan((x - 50)/50.0) for x in range(0,DW_size)])
-Py_initial = np.array(DW_size*[-1])
-Pz_initial = np.array(DW_size*[-1])
+Px_initial = np.array([(2*P0*2.0/np.pi)*math.atan((x - 50)/50.0) for x in range(0,DW_size)])
+Py_initial = np.array(DW_size*[-1*P0])
+Pz_initial = np.array(DW_size*[-1*P0])
 P_initial = np.array([Px_initial, Py_initial, Pz_initial])
 
 epsilon_11 = np.array([ x for x, _ in zip(sp.numbered_symbols('epsilon_11_'), range(0,DW_size))])
@@ -86,30 +86,34 @@ F_landau_sym = np.sum(a_1*(P[0]**2 + P[1]**2 + P[2]**2)
                     + np.sum(0.5*c_1111*(epsilon_11**2 + epsilon_22**2 + epsilon_33**2)
                     + c_1122*(epsilon_11*epsilon_22 + epsilon_22*epsilon_33 + epsilon_33*epsilon_11)
                     + 0.5*c_1212*(epsilon_12**2 + epsilon_23**2 + epsilon_31**2)
-                    + 0.5*q_1111*(epsilon_11*P[0]**2 + epsilon_22*P[1]**2 + epsilon_33*P[2]**2)
-                    + q_1122*(epsilon_11*P[1]**2 + epsilon_22*P[2]**2 + epsilon_33*P[0]**2)
-                    + 0.5*q_1212*(epsilon_12*P[0]*P[1] + epsilon_23*P[1]*P[2] + epsilon_31*P[2]*P[0]))
+                    - 0.5*q_1111*(epsilon_11*P[0]**2 + epsilon_22*P[1]**2 + epsilon_33*P[2]**2)
+                    - q_1122*(epsilon_11*(P[1]**2+P[2]**2) + epsilon_22*(P[2]**2+P[0]**2) + epsilon_33*(P[0]**2+P[1]**2))
+                    - 0.5*q_1212*(epsilon_12*P[0]*P[1] + epsilon_23*P[1]*P[2] + epsilon_31*P[2]*P[0]))
 
 print(F_landau_sym)
 F_landau_num = sp.lambdify(variables, F_landau_sym, modules='numpy')
 
-cons = [{'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,0] + 1)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,-1] - 1)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,0] + 1)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,-1] + 1)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,0] + 1)**2},
-        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,-1] + 1)**2}]
+cons = [{'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,0] + P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[0,-1] - P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,0] + P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[1,-1] + P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,0] + P0)**2},
+        {'type': 'eq', 'fun': lambda x:  (to_tensor(np.array(x))[2,-1] + P0)**2}]
 
-Pepsilon_ = minimize(F_landau_, variables_initial, method='SLSQP', constraints=cons, tol=1e-3)
+bnds = tuple((-1,1) for x in variables)
+
+Pepsilon_ = minimize(F_landau_, variables_initial, method='SLSQP', constraints=cons, bounds=bnds, tol=1e-3)
 Pepsilon = to_tensor(Pepsilon_.x)
 
-print(Pepsilon_.x)
+print(to_tensor(Pepsilon_.x))
 print(F_landau_(Pepsilon_.x))
 # plot part
 fig=plt.figure(figsize=(10, 6))
 #plt.subplots_adjust(hspace=0.0,wspace=0.5,left=0.10,right=0.99,top=0.99,bottom=0.1)
 plt.plot(range(0,DW_size), Pepsilon[0], 'r-', label='[100]')
-plt.plot(range(0,DW_size), np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2), 'g-', label='[011]')
+plt.plot(range(0,DW_size), Pepsilon[1], 'g-', label='[010]')
+plt.plot(range(0,DW_size), Pepsilon[2], 'b-', label='[001]')
+#plt.plot(range(0,DW_size), np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2), 'g-', label='[011]')
 plt.title(title)
 plt.grid()
 plt.legend()
