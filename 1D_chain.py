@@ -26,9 +26,9 @@ def parse_text(xx):
     return yy
 
 sp.init_printing()  # LaTeX like pretty printing for IPython
-title = '$F_{Landau-Ginzburg-strain}$ Part'
+title = '$F_{Landau-Ginzburg-elastic-electrostriction}$'
 T = 300.0
-P0 = 0.541
+P0 = 0.54566
 DW_size = 51
 
 a_1 = 4.9*(T - 1103)*1E5*1E-10
@@ -107,16 +107,46 @@ Pepsilon = to_tensor(Pepsilon_.x)
 
 print(to_tensor(Pepsilon_.x))
 print(F_landau_(Pepsilon_.x))
+
 # plot part
-fig=plt.figure(figsize=(10, 6))
+fig=plt.figure(figsize=(10, 10))
+plt.suptitle(title, fontsize=24)
+axp = fig.add_subplot(2, 1, 1)
+## Move left y-axis and bottim x-axis to centre, passing through (0,0)
+#ax.spines['left'].set_position('center')
+#ax.spines['bottom'].set_position('center')
+## Eliminate upper and right axes
+#ax.spines['right'].set_color('none')
+#ax.spines['top'].set_color('none')
+## Show ticks in the left and lower axes only
+#ax.xaxis.set_ticks_position('bottom')
+#ax.yaxis.set_ticks_position('left')
+
 #plt.subplots_adjust(hspace=0.0,wspace=0.5,left=0.10,right=0.99,top=0.99,bottom=0.1)
-plt.plot(range(0,DW_size), Pepsilon[0], 'r-o', label='[100]')
-plt.plot(range(0,DW_size), Pepsilon[1], 'g-s', label='[010]')
-plt.plot(range(0,DW_size), Pepsilon[2], 'b-p', label='[001]')
-plt.plot(range(0,DW_size), np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2+Pepsilon[0]**2), 'k-', label='total polarization')
-plt.ylabel('$P (C/m^2)$')
-plt.title(title)
-plt.grid()
-plt.legend()
+axp.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[0], 'r-o', label='$P_{100}$')
+axp.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[1], 'g-s', label='$P_{010}$')
+axp.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[2], 'b-p', label='$P_{001}$')
+axp.plot(np.arange(-DW_size/2,DW_size/2)+1, np.sqrt(Pepsilon[1]**2+Pepsilon[2]**2+Pepsilon[0]**2), 'k-', label='$|P_{total}|$')
+axp.axhline(color='k', ls='dashed')
+axp.axvline(color='k', ls='dashed')
+axp.set_ylim(-1,1)
+#axp.set_xlabel('lattice grid',fontsize=12)
+axp.set_ylabel('$P (C/m^2)$',fontsize=18)
+axp.grid()
+axp.legend(loc='lower right')
 #plt.plot(range(0,DW_size),P[2],'b-')
+
+axe = fig.add_subplot(2, 1, 2)
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[3], 'r-o', label='$\epsilon_{11}$')
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[4], 'g-s', label='$\epsilon_{22}$')
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[5], 'b-p', label='$\epsilon_{33}$')
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[6], 'k-^', label='$\epsilon_{12}$')
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[7], 'y-<', label='$\epsilon_{23}$')
+axe.plot(np.arange(-DW_size/2,DW_size/2)+1, Pepsilon[8], 'm->', label='$\epsilon_{31}$')
+axe.axhline(color='k', ls='dashed')
+axe.axvline(color='k', ls='dashed')
+axe.set_ylabel('strain',fontsize=18)
+axe.grid()
+axe.legend(loc='lower right')
+
 plt.savefig(parse_text(title)+'.pdf', format='pdf')
